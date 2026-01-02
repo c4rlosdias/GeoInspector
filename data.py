@@ -3,17 +3,21 @@ import mathutils
 import multiprocessing
 import ifcopenshell.util.selector as selector
 import bonsai.tool as tool
+import bpy
 
-# Get the object's bounding box
-#
 
-def bounding_box(pontos):
-    xs = [p[0] for p in pontos]
-    ys = [p[1] for p in pontos]
-    zs = [p[2] for p in pontos]
-    min_pt = (min(xs), min(ys), min(zs))
-    max_pt = (max(xs), max(ys), max(zs))
-    return min_pt, max_pt
+def get_tree():
+    tree = ifcopenshell.geom.tree()
+    model = tool.Ifc.get()
+    settings = ifcopenshell.geom.settings()
+    settings.set(settings.USE_WORLD_COORDS, True)            
+    iterator = ifcopenshell.geom.iterator(settings, model, multiprocessing.cpu_count())
+    if iterator.initialize():
+        while True:
+            tree.add_element(iterator.get_native())
+            if not iterator.next():
+                break
+    return tree
 
 def get_box(obj, distance, side, decorator_color):
     bb_corners = []
@@ -50,7 +54,7 @@ def get_box(obj, distance, side, decorator_color):
     for corner in obj.bound_box:       
         bb_corners.append(mathutils.Vector(corner))
         
-           
+        
     for n in sides[side]['corners']:
         temp_corners.append(bb_corners[n])
         temp_corners.append(bb_corners[n] + vector_dist)
@@ -74,20 +78,72 @@ def get_box(obj, distance, side, decorator_color):
             (3, 5, decorator_color),
     ]
 
-    tuplas = [tuple(x) for x in corners]
-    min_pt, max_pt = bounding_box(tuplas)
+    pontos = [tuple(x) for x in corners]
+    
+    xs = [p[0] for p in pontos]
+    ys = [p[1] for p in pontos]
+    zs = [p[2] for p in pontos]
+    min_pt = (min(xs), min(ys), min(zs))
+    max_pt = (max(xs), max(ys), max(zs))
 
     return corners, edges, min_pt, max_pt
 
-def get_tree():
-    tree = ifcopenshell.geom.tree()
-    model = tool.Ifc.get()
-    settings = ifcopenshell.geom.settings()
-    settings.set(settings.USE_WORLD_COORDS, True)            
-    iterator = ifcopenshell.geom.iterator(settings, model, multiprocessing.cpu_count())
-    if iterator.initialize():
-        while True:
-            tree.add_element(iterator.get_native())
-            if not iterator.next():
-                break
-    return tree
+class Rules():
+    rules = {}
+    results = {}
+
+
+
+    @staticmethod
+    def search_filter(elements, query):
+        model = tool.Ifc.get()
+        search = selector.filter_elements(ifc_file=model, elements=elements,query=query)
+        return search
+
+
+
+    def load(self):
+        self.rules = {
+            "rule 1": {
+                "type"            : 'CheckFreeArea',
+                "search elements" : 'IfcDoor',
+                "components"      : 'IfcFurniture',
+                "distances"       : {
+                    'top'    : 0.0,
+                    'bottom' : 0.0,
+                    'front'  : 1.0,
+                    'back'   : 0.0,
+                    'right'  : 0.0,
+                    'left'   : 0.0
+                },
+
+            }
+        }
+
+    def clear(self):
+        self.rules = {}
+
+    def check_free_area(self, element, color, query, distances ):
+        sides = ['front', 'back', 'right', 'left', 'top', 'bottom']
+        components = {}
+        obj = tool.Ifc.get_object_by_identifier(element.id())
+        self.results = {}
+        if obj:
+            print('creating tree...')
+            tree = get_tree()
+            print('tree created')
+            for side in sides:
+                dist_side = distances[side]
+                if dist_side > 0:
+                    corners, edges, minpt, maxpt = get_box(obj, dist_side, side, color)
+                    print(f'find elements for {side}...')
+                    elements = tree.select_box((minpt,maxpt), completely_within=True)
+                    print('filtering...')
+                    elements = self.search_filter(elements, query)
+                    components[side] = elements
+            print('checking done!')
+            self.results = components
+
+
+
+

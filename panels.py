@@ -44,7 +44,7 @@ class Panel_Draw_Box(bpy.types.Panel):
         row = layout.row() 
         row.label(text="Check Free Area dimensions:")
         box = layout.box() 
-        split = box.split(factor=0.5)
+        split = box.split(factor=0.3)
         col1=split.column()
         col1.alignment='CENTER'
         col2=split.column()
@@ -55,18 +55,21 @@ class Panel_Draw_Box(bpy.types.Panel):
         col1.prop(props, "back_dist") 
         col1.prop(props, "bottom_dist")      
         col1.prop(props, "right_dist")
-        col1.prop(props, "left_dist")  
+        col1.prop(props, "left_dist") 
+        col1.separator() 
+        col1.operator("bim.clear_distances", text="clear distances")
         
         col2.separator()
         
         pcoll = previews.preview_collections["main"]
         col2.template_icon(icon_value=pcoll['dimensions'].icon_id, scale=10)
 
+        row = layout.row()
+        row.operator("bim.remove_box", text="Remove boxes")
+
         if len(context.selected_objects) > 0:
-            row=layout.row()
-            row.operator("bim.draw_box", text="Draw")
-            row = layout.row()
-            row.operator("bim.remove_box", text="Remove")
+            #row=layout.row()
+            row.operator("bim.draw_box", text="Draw boxes")
             row = layout.row()
             row.operator("bim.search", text="Search components in free area")
         
@@ -81,7 +84,8 @@ class Panel_Draw_Box(bpy.types.Panel):
                 props,
                 "components",
                 props,
-                "active_component_index"
+                "active_component_index",
+                rows=4
             )
         
 class GI_UL_components(bpy.types.UIList):
@@ -91,15 +95,21 @@ class GI_UL_components(bpy.types.UIList):
             row.label(text=item.side, icon="SELECT_SUBTRACT")
             # op = row.operator("bim.select_object", text="", icon="RESTRICT_SELECT_OFF")
             # op.ifc_id = item.ifc_id
-            layout.template_list(
-                "GI_UL_elements",
-                "",
-                item,
-                "elements",
-                item,
-                "active_element_index",
-                rows=3
-            )
+            if len(item.elements) > 0:
+                layout.template_list(
+                    "GI_UL_elements",
+                    "",
+                    item,
+                    "elements",
+                    item,
+                    "active_element_index",
+                    rows=3
+                )
+               
+            else: 
+                row.label(text='No elements found!')
+            
+            
 
 class GI_UL_elements(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
@@ -123,4 +133,6 @@ class Panel_Author(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         row = layout.row()
-        row.label(text="V 0.0.1 - Open BIM Academy\u00AE", icon='MOD_LINEART')
+        row.label(text="GromInspector V 0.0.1", icon='MOD_LINEART')
+        row = layout.row()
+        row.label(text="Carlos dias - Open BIM Academy\u00AE")

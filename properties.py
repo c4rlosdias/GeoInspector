@@ -8,16 +8,24 @@ class Element(PropertyGroup):
     side     : StringProperty(name='side')
 
 class Component(PropertyGroup):
-    side: StringProperty(name='side')
-    elements : CollectionProperty(name='elements', type=Element)    
+    side                 : StringProperty(name='side')
+    n                    : IntProperty(name='n', default=0)
+    elements             : CollectionProperty(name='elements', type=Element)    
     active_element_index : IntProperty(name='element index')
 
-
+class Result(PropertyGroup):
+    type : StringProperty(name='type')
+    id   : IntProperty(name='id')
+    name : StringProperty(name='name')
+    
 
 class MyProperties(PropertyGroup): 
+    results         : CollectionProperty(name='results', type=Result)  
+
+    # Check free area
     box_is_hide     : BoolProperty(name="hide box", default=False)    
     source_elements : StringProperty(name='Checked Componentes', default='IfcDoor')
-    search_elements : StringProperty(name='Components in free Area', default='IfcColumn')
+    search_elements : StringProperty(name='Components in free Area', default='IfcElement')
     front_dist      : FloatProperty(name='Front', default=0)
     back_dist       : FloatProperty(name='Back', default=0)
     right_dist      : FloatProperty(name='Right', default=0)
@@ -33,7 +41,7 @@ class MyProperties(PropertyGroup):
                      )
     
     # UL elements
-    components           : CollectionProperty(name='elements', type=Component)
+    components             : CollectionProperty(name='elements', type=Component)
     active_component_index : IntProperty(name='component index')
 
                                    
