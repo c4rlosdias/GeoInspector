@@ -1,15 +1,45 @@
 import bpy
 import mathutils
 from .decorators import BoxDecorator
-from .data import *
+from . import data
 import ifcopenshell
 import ifcopenshell.geom
 import ifcopenshell.util.selector as selector
 import bonsai.tool as tool
 import multiprocessing
 
-# Get the object's bounding box
 
+class Operator_Load_Rules(bpy.types.Operator):
+    """ """
+    bl_idname = "bim.load_rules"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context): 
+        data.load_rules(context)
+        return {"FINISHED"}
+
+class Operator_Clear_Rules(bpy.types.Operator):
+    """ """
+    bl_idname = "bim.clear_rules"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context): 
+        data.clear_rules()
+        return {"FINISHED"}
+
+class Operator_Add_Rule(bpy.types.Operator):
+    """ """
+    bl_idname = "bim.add_rule"
+    bl_label = ""
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context): 
+        props = context.scene.my_props
+        props.add_rule = True
+        return {"FINISHED"}
+       
 class Operator_Draw_Box(bpy.types.Operator):
     """Draw clearance box """
     bl_idname = "bim.draw_box"
@@ -122,12 +152,12 @@ class Operator_Search(bpy.types.Operator):
     bl_label = "Search components in free area"
     bl_options = {"REGISTER", "UNDO"}
    
-    def execute(self, context): 
-        context = bpy.context
+    def execute(self, context):         
         props = context.scene.my_props
         obj = context.active_object
         color = props.decorator_color
         query = props.search_elements
+        rule = 'rule 1'
         distances = {
             'front'  : props.front_dist,
             'back'   : props.back_dist,
@@ -136,27 +166,27 @@ class Operator_Search(bpy.types.Operator):
             'right'  : props.right_dist,
             'left'   : props.left_dist,
         }
-        rules = Rules()
-        rules.load()
         try:
             props.components.clear()            
             element = tool.Ifc.get_entity(obj)
-            rules.check_free_area(element, color, query, distances)
-            components = rules.results
-            for side, elements in components.items():
-                new_component = props.components.add()
-                new_component.side = side
-                new_component.n = len(elements)
-                for element in elements:                    
-                    new_item = new_component.elements.add()
-                    new_item.type = element.is_a()
-                    new_item.name = element.Name
-                    new_item.ifc_id = element.id()
-                    new_item.side = side
-                    obj = tool.Ifc.get_object_by_identifier(element.id())
-                    if obj:
-                        obj.select_set(True)   
-                return {"FINISHED"}
+            
+            data.check_free_area(rule, element, color, query, distances)
+            if len(data.results) > 0:
+                components = data.results['rule 1']
+                for side, elements in components.items():
+                    new_component = props.components.add()
+                    new_component.side = side
+                    new_component.n = len(elements)
+                    for element in elements:                    
+                        new_item = new_component.elements.add()
+                        new_item.type = element.is_a()
+                        new_item.name = element.Name
+                        new_item.ifc_id = element.id()
+                        new_item.side = side
+                        obj = tool.Ifc.get_object_by_identifier(element.id())
+                        if obj:
+                            obj.select_set(True)   
+                    return {"FINISHED"}
             return {"FINISHED"}
         except Exception as e:
             #self.report({'ERROR'}, e)

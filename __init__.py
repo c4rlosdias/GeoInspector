@@ -43,8 +43,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "li
 classes = [
     Element,
     Component,
-    Result,
-    MyProperties,    
+    Rule,
+    MyProperties, 
+    Operator_Load_Rules,  
+    Operator_Clear_Rules, 
+    Operator_Add_Rule,
     Operator_Draw_Box,
     Operator_Remove_Box,
     Operator_Clear_Distances,
@@ -53,7 +56,10 @@ classes = [
     ErrorMessage,
     GI_UL_elements,
     GI_UL_components,
-    Panel_Draw_Box,
+    Panel_Free_Area,
+    GI_UL_rules,
+    Panel_Search,
+    Panel_Settings,
     Panel_Author
     
 ]
