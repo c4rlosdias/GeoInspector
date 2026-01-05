@@ -1,5 +1,5 @@
 # GeoInspector
 Geometry inspector for BIM files
-version 1.0.1
+version 0.2.0
 
 

@@ -1,0 +1,36 @@
+{
+    "rules" :  [
+        {
+            "name" : "Check free area to doors",
+            "description" : "Check free area to doors",
+            "type"        : "CheckFreeArea",
+            "check"       : "IfcDoor",
+            "search"      : "IfcFurniture",
+            "distances"   : {
+                "top"    : 0.0,
+                "bottom" : 0.0,
+                "front"  : 1.0,
+                "back"   : 0.0,
+                "right"  : 0.0,
+                "left"   : 0.0
+            }
+        },
+
+        {
+            "name"            : "Check free area to windows",
+            "description"     : "Check free area to windows",
+            "type"            : "CheckFreeArea",
+            "check"           : "IfcWindow",
+            "search"          : "IfcElement",
+            "distances"       : {
+                "top"    : 0.0,
+                "bottom" : 0.0,
+                "front"  : 1.0,
+                "back"   : 0.0,
+                "right"  : 0.0,
+                "left"   : 1.0
+        }
+        }
+    ]
+    
+}

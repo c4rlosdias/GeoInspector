@@ -46,25 +46,32 @@ classes = [
     Rule,
     MyProperties, 
     Operator_Load_Rules,  
+    Operator_Save_Rules,
     Operator_Clear_Rules, 
     Operator_Add_Rule,
+    Operator_Show_Hide_Rule,
+    Operator_Quit_Rule,
+    Operator_Save_Rule,
+    Operator_Delete_Rule,
     Operator_Draw_Box,
     Operator_Remove_Box,
     Operator_Clear_Distances,
     Operator_Search,
     Operator_select_object,
     ErrorMessage,
+    OpenWebpage,
     GI_UL_elements,
     GI_UL_components,
     Panel_Free_Area,
     GI_UL_rules,
-    Panel_Search,
+    Panel_Results,
     Panel_Settings,
     Panel_Author
     
 ]
 
 def register():
+    data.clear_rules()
     previews.load_previews()
     for c in classes:
         register_class(c)
@@ -72,7 +79,7 @@ def register():
 
 
 def unregister():
-    
+    data.clear_rules()
     del Scene.my_props
     for c in classes:
         unregister_class(c)

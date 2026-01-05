@@ -3,6 +3,19 @@ import bpy
 from bpy.props import *
 from . import data
 
+def update_active_rule(self, context):
+    if len(data.rules) > self.active_rule_index:
+        self.rule_name = data.rules[self.active_rule_index]['name']
+        self.rule_description = data.rules[self.active_rule_index]['description']
+        self.source_elements = data.rules[self.active_rule_index]['check']
+        self.search_elements = data.rules[self.active_rule_index]['search']
+        self.top_dist = data.rules[self.active_rule_index]['distances']['top']
+        self.bottom_dist = data.rules[self.active_rule_index]['distances']['bottom']
+        self.front_dist = data.rules[self.active_rule_index]['distances']['front']
+        self.back_dist = data.rules[self.active_rule_index]['distances']['back']
+        self.right_dist = data.rules[self.active_rule_index]['distances']['right']
+        self.left_dist = data.rules[self.active_rule_index]['distances']['left']
+
 
 class Element(PropertyGroup):
     type                 : StringProperty(name='type')
@@ -20,15 +33,21 @@ class Rule(PropertyGroup):
     type                 : StringProperty(name='type')
     id                   : IntProperty(name='id')
     name                 : StringProperty(name='name')
+    description          : StringProperty(name='description')
 
 
 class MyProperties(PropertyGroup): 
+    #============================================================================================
+    # Check Free Area
+    #============================================================================================
     rules                : CollectionProperty(name='results', type=Rule)
-    active_rule_index    : IntProperty(name='rule index' ) 
-    add_rule             : BoolProperty(name='add rule', default=False)  
+    active_rule_index    : IntProperty(name='rule index', update=update_active_rule) 
+    show_rule            : BoolProperty(name='show rule', default=False)
+    box_is_hide          : BoolProperty(name="hide box", default=False)
 
-    # Check free area
-    box_is_hide          : BoolProperty(name="hide box", default=False)    
+    rule_name            : StringProperty(name='rule name')
+    rule_description     : StringProperty(name='rule description')
+
     source_elements      : StringProperty(name='Checked Componentes', default='IfcDoor')
     search_elements      : StringProperty(name='Components in free Area', default='IfcElement')
     front_dist           : FloatProperty(name='Front', default=0)

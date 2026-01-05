@@ -4,7 +4,7 @@ import multiprocessing
 import ifcopenshell.util.selector as selector
 import bonsai.tool as tool
 import bpy
-from . import operators
+import json
 
 rules = {}
 results = {}
@@ -96,54 +96,111 @@ def search_filter(elements, query):
     search = selector.filter_elements(ifc_file=model, elements=elements,query=query)
     return search
 
-def load_rules(context):
-    
+def update_rules(context):
     props = context.scene.my_props
     props.rules.clear()
-    rules[0] = {
-        "name"            : 'Check free area to doors',
-        "description"     : 'Check free area to doors',
+    # rule2 = {}
+    # c = 0
+    # for rule in rules:
+    #     print(rule)
+    #     rule2[c] = rules[rule]
+    #     c += 1
+    # print(rule2)
+
+    for rule in rules:
+        new_item = props.rules.add()
+        new_item.id = rule
+        new_item.name = rules[rule]['name']
+        new_item.description = rules[rule]['description']
+        new_item.type = rules[rule]['type']
+    
+
+def update_active_rule(context, id):
+    props = context.scene.my_props
+    props.active_rule_index = id
+    props.rule_name        = rules[id]['name'] 
+    props.rule_description = rules[id]['description']
+    props.source_elements  = rules[id]['check']
+    props.search_elements  = rules[id]['search']
+    props.top_dist         = rules[id]['distances']['top']
+    props.bottom_dist      = rules[id]['distances']['bottom'] 
+    props.front_dist       = rules[id]['distances']['front'] 
+    props.back_dist        = rules[id]['distances']['back'] 
+    props.right_dist       = rules[id]['distances']['right']
+    props.left_dist        = rules[id]['distances']['left'] 
+
+def add_rule(context):
+    props = context.scene.my_props
+    i = len(rules)
+    rule = {
+        "name"            : 'Unamed',
+        "description"     : '',
         "type"            : 'CheckFreeArea',
-        "search elements" : 'IfcDoor',
-        "components"      : 'IfcFurniture',
+        "check"           : 'IfcDoor',
+        "search"          : 'IfcElement',
         "distances"       : {
             'top'    : 0.0,
             'bottom' : 0.0,
-            'front'  : 1.0,
+            'front'  : 0.0,
             'back'   : 0.0,
             'right'  : 0.0,
             'left'   : 0.0
         },
     }
+    rules[i] = rule    
+    update_rules(context)
+    props.active_rule_index = i
+    props.show_rule = True
+    print(rules)
 
-    rules[1] = {
-        "name"            : 'Check free area to windows',
-        "description"     : 'Check free area to windows',
-        "type"            : 'CheckFreeArea',
-        "search elements" : 'IfcWindow',
-        "components"      : 'IfcElement',
-        "distances"       : {
-            'top'    : 0.0,
-            'bottom' : 0.0,
-            'front'  : 1.0,
-            'back'   : 0.0,
-            'right'  : 0.0,
-            'left'   : 1.0
-        },
-    }
+def delete_rule(context, i):
+    k = len(rules)-1
+    w = 0 if i==0 else i-1
+    if i == len(rules) - 1:
+        rules.pop(i)
+    else:
+        for j in range(w, k):
+            rules[j]=rules[j+1]
+        rules.pop(k)
+
+
+    update_rules(context)
+    update_active_rule(context, 0)
+    print(rules)
+
+def load_rules(context, dados):    
+    props = context.scene.my_props
+    props.rules.clear()
+    n = 0
+    rules.clear()        
+    for dado in dados['rules']:
+        rules[n] = dado
+        n += 1
+
     for rule  in rules:
         new_item = props.rules.add()
         new_item.id = rule
         new_item.name = rules[rule]['name']
+        new_item.description = rules[rule]['description']
         new_item.type = rules[rule]['type']
     
-
 def clear_rules():
     rules.clear()
 
-def save_rule(context):
+def save_rule(context, id):    
+    props = context.scene.my_props
+    rules[id]['name'] = props.rule_name 
+    rules[id]['description'] = props.rule_description
+    rules[id]['check'] = props.source_elements
+    rules[id]['search'] = props.search_elements
+    rules[id]['distances']['top'] = props.top_dist
+    rules[id]['distances']['bottom'] = props.bottom_dist 
+    rules[id]['distances']['front'] = props.front_dist 
+    rules[id]['distances']['back'] = props.back_dist 
+    rules[id]['distances']['right'] = props.right_dist 
+    rules[id]['distances']['left'] = props.left_dist 
 
-    return True
+    update_rules(context)
 
 def check_free_area(rule, element, color, query, distances ):
     sides = ['front', 'back', 'right', 'left', 'top', 'bottom']
@@ -165,6 +222,13 @@ def check_free_area(rule, element, color, query, distances ):
                 components[side] = elements
         print('checking done!')
         results[rule] = components
+        
+def localview(with_zoom):
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            with bpy.context.temp_override(area=area, region=area.regions[-1]):
+                bpy.ops.view3d.localview(frame_selected=with_zoom)
+            break
 
 
 
