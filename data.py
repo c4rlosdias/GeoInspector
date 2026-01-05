@@ -97,7 +97,7 @@ def search_filter(elements, query):
     return search
 
 def update_rules(context):
-    props = context.scene.my_props
+    props = context.scene.gei_props
     props.rules.clear()
     # rule2 = {}
     # c = 0
@@ -113,10 +113,9 @@ def update_rules(context):
         new_item.name = rules[rule]['name']
         new_item.description = rules[rule]['description']
         new_item.type = rules[rule]['type']
-    
 
 def update_active_rule(context, id):
-    props = context.scene.my_props
+    props = context.scene.gei_props
     props.active_rule_index = id
     props.rule_name        = rules[id]['name'] 
     props.rule_description = rules[id]['description']
@@ -130,17 +129,17 @@ def update_active_rule(context, id):
     props.left_dist        = rules[id]['distances']['left'] 
 
 def add_rule(context):
-    props = context.scene.my_props
+    props = context.scene.gei_props
     i = len(rules)
     rule = {
         "name"            : 'Unamed',
         "description"     : '',
         "type"            : 'CheckFreeArea',
-        "check"           : 'IfcDoor',
-        "search"          : 'IfcElement',
+        "check"           : 'IfcFireSuppressionTerminal',
+        "search"          : 'IfcSlab',
         "distances"       : {
             'top'    : 0.0,
-            'bottom' : 0.0,
+            'bottom' : 1.1,
             'front'  : 0.0,
             'back'   : 0.0,
             'right'  : 0.0,
@@ -164,12 +163,13 @@ def delete_rule(context, i):
         rules.pop(k)
 
 
-    update_rules(context)
-    update_active_rule(context, 0)
+    if i != 0:
+        update_rules(context)
+        update_active_rule(context, 0)
     print(rules)
 
 def load_rules(context, dados):    
-    props = context.scene.my_props
+    props = context.scene.gei_props
     props.rules.clear()
     n = 0
     rules.clear()        
@@ -183,12 +183,19 @@ def load_rules(context, dados):
         new_item.name = rules[rule]['name']
         new_item.description = rules[rule]['description']
         new_item.type = rules[rule]['type']
-    
+
+def save_rules():    
+    dados = [] 
+    for rule  in rules:
+        values = rules[rule]
+        dados.append(values)
+    return dados
+
 def clear_rules():
     rules.clear()
 
 def save_rule(context, id):    
-    props = context.scene.my_props
+    props = context.scene.gei_props
     rules[id]['name'] = props.rule_name 
     rules[id]['description'] = props.rule_description
     rules[id]['check'] = props.source_elements
@@ -202,27 +209,36 @@ def save_rule(context, id):
 
     update_rules(context)
 
-def check_free_area(rule, element, color, query, distances ):
+def check_free_area(rule, source_query, search_query, color, distances ):
     sides = ['front', 'back', 'right', 'left', 'top', 'bottom']
     components = {}
-    obj = tool.Ifc.get_object_by_identifier(element.id())
-    results.clear()
-    if obj:
-        print('creating tree...')
-        tree = get_tree()
-        print('tree created')
-        for side in sides:
-            dist_side = distances[side]
-            if dist_side > 0:
-                corners, edges, minpt, maxpt = get_box(obj, dist_side, side, color)
-                print(f'find elements for {side}...')
-                elements = tree.select_box((minpt,maxpt), completely_within=True)
-                print('filtering...')
-                elements = search_filter(elements, query)
-                components[side] = elements
-        print('checking done!')
-        results[rule] = components
-        
+    tree = None
+    print(f'initializing rule {rule}...')
+    elements = search_filter(None, source_query)
+    for element in elements:
+        obj = tool.Ifc.get_object_by_identifier(element.id())        
+        if obj:
+            print('verify if tree exists...')
+            if not tree:
+                print('creating tree...')
+                tree = get_tree()
+                print('tree created')
+            else:
+                print('tree exist')
+
+            for side in sides:
+                dist_side = distances[side]
+                if dist_side > 0:
+                    corners, edges, minpt, maxpt = get_box(obj, dist_side, side, color)
+                    print(f'find elements for {side}...')
+                    elements = tree.select_box((minpt,maxpt), completely_within=True)
+                    print('filtering...')
+                    elements = search_filter(elements, search_query)
+                    components[side] = elements
+            print(f'checking rule {rule} done!')
+    return components
+    print('checking done!')  
+
 def localview(with_zoom):
     for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':

@@ -44,7 +44,7 @@ classes = [
     Element,
     Component,
     Rule,
-    MyProperties, 
+    GEI_Properties, 
     Operator_Load_Rules,  
     Operator_Save_Rules,
     Operator_Clear_Rules, 
@@ -66,7 +66,7 @@ classes = [
     GI_UL_rules,
     Panel_Results,
     Panel_Settings,
-    Panel_Author
+    Panel_Info
     
 ]
 
@@ -75,12 +75,12 @@ def register():
     previews.load_previews()
     for c in classes:
         register_class(c)
-    Scene.my_props = PointerProperty(type=MyProperties)
+    Scene.gei_props = PointerProperty(type=GEI_Properties)
 
 
 def unregister():
     data.clear_rules()
-    del Scene.my_props
+    del Scene.gei_props
     for c in classes:
         unregister_class(c)
     previews.unload_previews()

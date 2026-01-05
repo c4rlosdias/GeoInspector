@@ -23,7 +23,7 @@ class Panel_Free_Area(bpy.types.Panel):
         layout.label(text="", icon='OBJECT_HIDDEN')
     
     def draw(self, context): 
-        props = context.scene.my_props
+        props = context.scene.gei_props
         layout = self.layout
             
         if props.show_rule:
@@ -36,8 +36,9 @@ class Panel_Free_Area(bpy.types.Panel):
         row = layout.row()      
         row.operator("gei.load_rules", text='Load Rules')   
         row.operator("gei.save_rules", text='Save Rules') 
+        row.operator("gei.clear_rules", text='Clear Rules') 
         row = layout.row() 
-        row.operator("gei.clear_rules", text='Clear Rules')  
+         
         row.operator("gei.add_rule", text='Add Rule', icon='EVENT_NDOF_BUTTON_PLUS') 
         if  len(data.rules) > 0: 
             row.operator("gei.show_hide_rule", text=text, icon=icon) 
@@ -54,7 +55,7 @@ class Panel_Free_Area(bpy.types.Panel):
                 "active_rule_index",
                 rows=4
             )
-
+        # show activated rule
         if  props.show_rule and len(data.rules) > 0:            
             row = layout.row() 
             row.separator()
@@ -66,12 +67,12 @@ class Panel_Free_Area(bpy.types.Panel):
             split=box.split(factor=0.6)
             col_text = split.column()
             col_prop = split.column()
-            col_text.label(text='Id')
+            
             col_text.label(text='Name')
             col_text.label(text='Description')
             col_text.label(text='Checked Componentes')
             col_text.label(text='Componentes in  free area')
-            col_prop.prop(props, "active_rule_index", text="")
+            
             col_prop.prop(props, "rule_name", text="")
             col_prop.prop(props, "rule_description", text="")
             col_prop.prop(props, 'source_elements', text='')
@@ -112,7 +113,7 @@ class Panel_Free_Area(bpy.types.Panel):
             row.operator("gei.quit_rule", text="Quit", icon='QUIT')
             row.operator("gei.save_rule", text="Save Rule", icon='DISC').id = props.active_rule_index
         row = layout.row() 
-        row.operator("gei.search", text="Search components in free area")
+        row.operator("gei.search", text="Search components in free area", icon='VIEWZOOM')
           
 class GI_UL_rules(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
@@ -137,11 +138,13 @@ class Panel_Results(bpy.types.Panel):
     bl_category     = "GeoInspector"    
     #bl_options      = {"DEFAULT_CLOSED"}
     
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon='WORDWRAP_ON')
+
     def draw(self, context): 
-        props = context.scene.my_props
+        props = context.scene.gei_props
         layout = self.layout        
-        row = layout.row()
-        row.label(text='Results:', icon='WORDWRAP_ON')
         if len(props.components) > 0:
             row = layout.row()
             row.separator()
@@ -201,8 +204,12 @@ class Panel_Settings(bpy.types.Panel):
     bl_category     = "GeoInspector"
     bl_options      = {"DEFAULT_CLOSED"}
     
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon='SETTINGS')
+
     def draw(self, context):
-        props = context.scene.my_props
+        props = context.scene.gei_props
         layout = self.layout
         row = layout.row()
         row.prop(props, "decorator_color") 
@@ -211,16 +218,20 @@ class Panel_Settings(bpy.types.Panel):
 # Author
 #============================================================================================
 
-class Panel_Author(bpy.types.Panel):
+class Panel_Info(bpy.types.Panel):
     
-    bl_label        = "Author"
-    bl_idname       = "VIEW3D_PT_author"
+    bl_label        = "Info"
+    bl_idname       = "VIEW3D_PT_info"
     bl_space_type   = 'VIEW_3D'
     bl_region_type  = 'UI'
     bl_context      = "objectmode"
     bl_category     = "GeoInspector"
     bl_options      = {"DEFAULT_CLOSED"}
     
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(text="", icon='INFO_LARGE')
+
     def draw(self, context):
         layout = self.layout
         row = layout.row()

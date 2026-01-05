@@ -23,7 +23,7 @@ class Operator_Load_Rules(bpy.types.Operator):
             with open(self.filepath, "r", encoding="utf-8") as f:
                 dados = json.load(f)
             print(dados)
-            props = context.scene.my_props
+            props = context.scene.gei_props
             props.show_rule = False
             data.load_rules(context, dados)
         except Exception as e:
@@ -47,12 +47,14 @@ class Operator_Save_Rules(bpy.types.Operator):
 
     def execute(self, context): 
         try:
-            with open(self.filepath, "r", encoding="utf-8") as f:
-                dados = json.load(f)
+            dados={}
+            dados['rules'] = data.save_rules()
+            with open(self.filepath, "w", encoding="utf-8") as f:
+                json.dump(dados, f, ensure_ascii=False, indent=4)
             print(dados)
-            props = context.scene.my_props
+            props = context.scene.gei_props
             props.show_rule = False
-            data.load_rules(context, dados)
+            
         except Exception as e:
             bpy.ops.wm.error_message('INVOKE_DEFAULT', message=str(e))
             return {"CANCELLED"}
@@ -70,7 +72,7 @@ class Operator_Clear_Rules(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context): 
-        props = context.scene.my_props
+        props = context.scene.gei_props
         props.show_rule = False
         data.clear_rules()
         return {"FINISHED"}
@@ -94,7 +96,7 @@ class Operator_Show_Hide_Rule(bpy.types.Operator):
     id : bpy.props.IntProperty(name="id")
 
     def execute(self, context): 
-        props = context.scene.my_props
+        props = context.scene.gei_props
         props.show_rule = not props.show_rule            
         return {"FINISHED"}
     
@@ -105,7 +107,7 @@ class Operator_Quit_Rule(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context): 
-        props = context.scene.my_props
+        props = context.scene.gei_props
         props.show_rule = False
         return {"FINISHED"}
     
@@ -118,8 +120,11 @@ class Operator_Save_Rule(bpy.types.Operator):
     id : bpy.props.IntProperty(name="id")
 
     def execute(self, context): 
-        data.save_rule(context, self.id)
-           
+        try:
+            data.save_rule(context, self.id)
+        except Exception as e:            
+            bpy.ops.wm.error_message('INVOKE_DEFAULT', message=str(e))
+            return {"CANCELLED"}
         return {"FINISHED"}
 
 class Operator_Delete_Rule(bpy.types.Operator):
@@ -131,7 +136,11 @@ class Operator_Delete_Rule(bpy.types.Operator):
     id : bpy.props.IntProperty(name="id")
 
     def execute(self, context): 
-        data.delete_rule(context, self.id)
+        try:
+            data.delete_rule(context, self.id)
+        except Exception as e:            
+            bpy.ops.wm.error_message('INVOKE_DEFAULT', message=str(e))
+            return {"CANCELLED"}
         return {"FINISHED"}
 
 class Operator_Draw_Box(bpy.types.Operator):
@@ -142,7 +151,7 @@ class Operator_Draw_Box(bpy.types.Operator):
 
 
     def execute(self, context):         
-        props = context.scene.my_props
+        props = context.scene.gei_props
         objs = context.selected_objects
         color = props.decorator_color
         sides = ['front', 'back', 'right', 'left', 'top', 'bottom']
@@ -177,7 +186,7 @@ class Operator_Clear_Distances(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context): 
-        props = context.scene.my_props
+        props = context.scene.gei_props
         props.front_dist = 0
         props.back_dist = 0
         props.top_dist = 0
@@ -193,45 +202,39 @@ class Operator_Search(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
    
     def execute(self, context):         
-        props = context.scene.my_props
-        obj = context.active_object
+        props = context.scene.gei_props
         color = props.decorator_color
-        query = props.search_elements
-        rule = 'rule 1'
-        distances = {
-            'front'  : props.front_dist,
-            'back'   : props.back_dist,
-            'top'    : props.top_dist,
-            'bottom' : props.bottom_dist,
-            'right'  : props.right_dist,
-            'left'   : props.left_dist,
-        }
-        try:
-            props.components.clear()            
-            element = tool.Ifc.get_entity(obj)
-            
-            data.check_free_area(rule, element, color, query, distances)
-            if len(data.results) > 0:
-                components = data.results['rule 1']
-                for side, elements in components.items():
-                    new_component = props.components.add()
-                    new_component.side = side
-                    new_component.n = len(elements)
-                    for element in elements:                    
-                        new_item = new_component.elements.add()
-                        new_item.type = element.is_a()
-                        new_item.name = element.Name
-                        new_item.ifc_id = element.id()
-                        new_item.side = side
-                        obj = tool.Ifc.get_object_by_identifier(element.id())
-                        if obj:
-                            obj.select_set(True)   
-                    return {"FINISHED"}
-            return {"FINISHED"}
-        except Exception as e:
-            #self.report({'ERROR'}, e)
-            bpy.ops.wm.error_message('INVOKE_DEFAULT', message=str(e))
-            return {"CANCELLED"}
+        data.results.clear()
+        for rule in data.rules:    
+            print(rule)        
+            source_query = data.rules[rule]['check']
+            search_query = data.rules[rule]['search']            
+            distances = data.rules[rule]['distances']    
+                  
+            components = data.check_free_area(rule, source_query, search_query, color, distances)
+            data.results[rule] = components
+        print(data.results)
+            # if len(data.results) > 0:
+            #     components = data.results[rule]
+            #     for side, elements in components.items():
+            #         new_component = props.components.add()
+            #         new_component.side = side
+            #         new_component.n = len(elements)
+            #         for element in elements:                    
+            #             new_item = new_component.elements.add()
+            #             new_item.type = element.is_a()
+            #             new_item.name = element.Name
+            #             new_item.ifc_id = element.id()
+            #             new_item.side = side
+            #             obj = tool.Ifc.get_object_by_identifier(element.id())
+            #             if obj:
+            #                 obj.select_set(True)   
+            #         return {"FINISHED"}
+        return {"FINISHED"}
+        # except Exception as e:
+        #     #self.report({'ERROR'}, e)
+        #     bpy.ops.wm.error_message('INVOKE_DEFAULT', message=str(e))
+        #     return {"CANCELLED"}
     
     def draw(self, context):
         layout = self.layout

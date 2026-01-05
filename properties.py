@@ -36,7 +36,7 @@ class Rule(PropertyGroup):
     description          : StringProperty(name='description')
 
 
-class MyProperties(PropertyGroup): 
+class GEI_Properties(PropertyGroup): 
     #============================================================================================
     # Check Free Area
     #============================================================================================
