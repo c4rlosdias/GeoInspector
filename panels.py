@@ -126,7 +126,7 @@ class GI_UL_rules(bpy.types.UIList):
             
 
 #============================================================================================
-# Search
+# Results
 #============================================================================================
 class Panel_Results(bpy.types.Panel):
     
@@ -149,7 +149,21 @@ class Panel_Results(bpy.types.Panel):
             row = layout.row()
             row.separator()
             row = layout.row()
+            row.label(text='Elements found:')
+
+            self.layout.template_list(
+                "GI_UL_result_elements",
+                "",
+                props,
+                "result_elements",
+                props,
+                "active_result_element_index",
+                rows=4
+            )
+
+            row = layout.row()
             row.label(text='Components in free area:')
+
             self.layout.template_list(
                 "GI_UL_components",
                 "",
@@ -160,26 +174,40 @@ class Panel_Results(bpy.types.Panel):
                 rows=4
             )
 
-class GI_UL_components(bpy.types.UIList):
+class GI_UL_result_elements(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
-            row = layout.row(align=True)
-            row.label(text=item.side, icon="SELECT_SUBTRACT")
+            row = layout.row(align=True)  
+            row.label(text=str(item.ifc_id))             
+            row.label(text=item.type)
+            row.label(text=item.name)          
             # op = row.operator("gei.select_object", text="", icon="RESTRICT_SELECT_OFF")
             # op.ifc_id = item.ifc_id
-            if len(item.elements) > 0:
-                layout.template_list(
-                    "GI_UL_elements",
-                    "",
-                    item,
-                    "elements",
-                    item,
-                    "active_element_index",
-                    rows=3
-                )
-               
-            else: 
-                row.label(text='No elements found!')
+
+class GI_UL_components(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
+        props = context.scene.gei_props
+        if item:
+            #if props.active_rule_index == item.rule:                    
+                row = layout.row(align=True)
+                row.label(text=item.side, icon="SELECT_SUBTRACT")
+                row.label(text=str(item.rule))
+                row.label(text=str(item.side))
+                # op = row.operator("gei.select_object", text="", icon="RESTRICT_SELECT_OFF")
+                # op.ifc_id = item.ifc_id
+                if len(item.elements) > 0:
+                    layout.template_list(
+                        "GI_UL_elements",
+                        "",
+                        item,
+                        "elements",
+                        item,
+                        "active_element_index",
+                        rows=3
+                    )
+                
+                else: 
+                    row.label(text='No elements found!')
  
 class GI_UL_elements(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):

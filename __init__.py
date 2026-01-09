@@ -60,6 +60,7 @@ classes = [
     Operator_select_object,
     ErrorMessage,
     OpenWebpage,
+    GI_UL_result_elements,
     GI_UL_elements,
     GI_UL_components,
     Panel_Free_Area,

@@ -209,7 +209,46 @@ def save_rule(context, id):
 
     update_rules(context)
 
-def check_free_area(rule, source_query, search_query, color, distances ):
+def check_free_area(color):
+    sides = ['front', 'back', 'right', 'left', 'top', 'bottom']
+    
+    results.clear()
+    tree = None
+    print(rules)
+    model = tool.Ifc.get()
+    for rule in rules:
+        print(f'initializing rule {rule}...')
+        source_query = rules[rule]['check']
+        search_query = rules[rule]['search']            
+        distances = rules[rule]['distances']
+        #elements = search_filter(None, source_query)
+        elements = selector.filter_elements(ifc_file=model, query=source_query)
+        for element in elements:
+            
+            res_elements = {}
+            obj = tool.Ifc.get_object_by_identifier(element.id())        
+            if obj:
+                print('verify if tree exists...')
+                if not tree:
+                    print('creating tree...')
+                    tree = get_tree()
+                    print('tree created')
+                else:
+                    print('tree exist')
+                components = {}
+                for side in distances:
+                    if distances[side] > 0:
+                        corners, edges, minpt, maxpt = get_box(obj, distances[side], side, color)
+                        print(f'find elements for {side}...')
+                        elements2 = tree.select_box((minpt,maxpt), completely_within=True)
+                        print('filtering...')
+                        elements2 = search_filter(elements2, search_query)
+                        components[side] = list(elements2)
+            res_elements[element.id()]=components
+        print(f'checking rule {rule} done!')
+        results[rule] = res_elements
+
+def _check_free_area(rule, source_query, search_query, color, distances ):
     sides = ['front', 'back', 'right', 'left', 'top', 'bottom']
     components = {}
     tree = None
@@ -236,8 +275,7 @@ def check_free_area(rule, source_query, search_query, color, distances ):
                     elements = search_filter(elements, search_query)
                     components[side] = elements
             print(f'checking rule {rule} done!')
-    return components
-    print('checking done!')  
+    return components 
 
 def localview(with_zoom):
     for area in bpy.context.screen.areas:

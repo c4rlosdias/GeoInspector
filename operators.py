@@ -203,38 +203,41 @@ class Operator_Search(bpy.types.Operator):
    
     def execute(self, context):         
         props = context.scene.gei_props
-        color = props.decorator_color
-        data.results.clear()
-        for rule in data.rules:    
-            print(rule)        
-            source_query = data.rules[rule]['check']
-            search_query = data.rules[rule]['search']            
-            distances = data.rules[rule]['distances']    
-                  
-            components = data.check_free_area(rule, source_query, search_query, color, distances)
-            data.results[rule] = components
-        print(data.results)
+        color = props.decorator_color 
+        model = tool.Ifc.get()
+        try:       
+            data.check_free_area(color) 
             # if len(data.results) > 0:
-            #     components = data.results[rule]
-            #     for side, elements in components.items():
-            #         new_component = props.components.add()
-            #         new_component.side = side
-            #         new_component.n = len(elements)
-            #         for element in elements:                    
-            #             new_item = new_component.elements.add()
-            #             new_item.type = element.is_a()
-            #             new_item.name = element.Name
-            #             new_item.ifc_id = element.id()
-            #             new_item.side = side
-            #             obj = tool.Ifc.get_object_by_identifier(element.id())
-            #             if obj:
-            #                 obj.select_set(True)   
-            #         return {"FINISHED"}
-        return {"FINISHED"}
-        # except Exception as e:
-        #     #self.report({'ERROR'}, e)
-        #     bpy.ops.wm.error_message('INVOKE_DEFAULT', message=str(e))
-        #     return {"CANCELLED"}
+            #     props.searh_elements.clear()
+            #     props.components.clear()
+            #     for rule, values in data.results.items(): 
+            #         for ifc_id, sides in values.items(): 
+            #             for side, elements in sides.items():
+            #                 search_element = model.by_id(ifc_id)
+            #                 new_search_element = props.search_elements.add()
+            #                 new_search_element.rule = rule
+            #                 new_search_element.type = search_element.is_a()
+            #                 new_search_element.name = search_element.Name
+            #                 new_search_element.ifc_id = ifc_id
+            #                 for element in elements: 
+            #                     new_component = props.components.add()                   
+            #                     new_item = new_component.elements.add()
+            #                     new_item.type = element.is_a()
+            #                     new_item.name = element.Name
+            #                     new_item.ifc_id = element.id()
+            #                     new_item.side = side
+            #                     new_item.rule = rule
+                                # obj = tool.Ifc.get_object_by_identifier(element.id())
+                                # if obj:
+                                #     obj.select_set(True)   
+                        
+            print(data.results)
+            with open(r'C:\Users\c4rlo\OneDrive\Área de Trabalho\result.json', "w", encoding="utf-8") as f:
+                json.dump(data.results, f, ensure_ascii=False, indent=4)
+            return {"FINISHED"}
+        except Exception as e:
+            bpy.ops.wm.error_message('INVOKE_DEFAULT', message=str(e))
+            return {"CANCELLED"}
     
     def draw(self, context):
         layout = self.layout
