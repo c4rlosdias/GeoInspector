@@ -145,7 +145,7 @@ class Panel_Results(bpy.types.Panel):
     def draw(self, context): 
         props = context.scene.gei_props
         layout = self.layout        
-        if len(props.components) > 0:
+        if len(props.result_elements) > 0:
             row = layout.row()
             row.separator()
             row = layout.row()
@@ -191,8 +191,6 @@ class GI_UL_components(bpy.types.UIList):
             #if props.active_rule_index == item.rule:                    
                 row = layout.row(align=True)
                 row.label(text=item.side, icon="SELECT_SUBTRACT")
-                row.label(text=str(item.rule))
-                row.label(text=str(item.side))
                 # op = row.operator("gei.select_object", text="", icon="RESTRICT_SELECT_OFF")
                 # op.ifc_id = item.ifc_id
                 if len(item.elements) > 0:

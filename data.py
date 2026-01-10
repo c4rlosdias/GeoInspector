@@ -220,12 +220,10 @@ def check_free_area(color):
         print(f'initializing rule {rule}...')
         source_query = rules[rule]['check']
         search_query = rules[rule]['search']            
-        distances = rules[rule]['distances']
-        #elements = search_filter(None, source_query)
-        elements = selector.filter_elements(ifc_file=model, query=source_query)
+        distances = rules[rule]['distances']        
+        elements = selector.filter_elements(ifc_file=model, query=source_query)    
+        res_elements = {}    
         for element in elements:
-            
-            res_elements = {}
             obj = tool.Ifc.get_object_by_identifier(element.id())        
             if obj:
                 print('verify if tree exists...')

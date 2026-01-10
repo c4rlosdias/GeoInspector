@@ -1,17 +1,14 @@
 {
-    "0": {
-        "1305": {
-            "front": [
-                "#1467=IfcFurniture(1ggM6i58D5TxSR7byCXsyU,$,coelho 2,$,$,#1502,#1475,$,$)",
-                "#1283=IfcFurniture(3Lj19QxaX1QOOK9SEWBkxC,$,coelho 1,$,$,#1466,#1292,$,$)"
+    "0" : {
+        "16092" : {
+            "bottom" : [
+                "#1260=IfcSlab('3BKTS$waD9ev4e0Hhl9ryc',$,'Slab',$,$,#1268,#1275,$,$)"
             ]
-        }
-    },
-    "1": {
-        "16066": {
-            "bottom": [
-                "#1260=IfcSlab(3BKTS$waD9ev4e0Hhl9ryc,$,Slab,$,$,#1268,#1275,$,$)",
-                "#16111=IfcSlab(0Ez781z2fA$BP05PfZGToy,$,Slab,$,$,#16137,#16125,$,$)"
+        },
+        "16066" : {
+            "bottom" : [
+                "#16111=IfcSlab('0Ez781z2fA$BP05PfZGToy',$,'Slab',$,$,#16137,#16125,$,$)",
+                "#1260=IfcSlab('3BKTS$waD9ev4e0Hhl9ryc',$,'Slab',$,$,#1268,#1275,$,$)"
             ]
         }
     }

@@ -206,34 +206,9 @@ class Operator_Search(bpy.types.Operator):
         color = props.decorator_color 
         model = tool.Ifc.get()
         try:       
-            data.check_free_area(color) 
-            # if len(data.results) > 0:
-            #     props.searh_elements.clear()
-            #     props.components.clear()
-            #     for rule, values in data.results.items(): 
-            #         for ifc_id, sides in values.items(): 
-            #             for side, elements in sides.items():
-            #                 search_element = model.by_id(ifc_id)
-            #                 new_search_element = props.search_elements.add()
-            #                 new_search_element.rule = rule
-            #                 new_search_element.type = search_element.is_a()
-            #                 new_search_element.name = search_element.Name
-            #                 new_search_element.ifc_id = ifc_id
-            #                 for element in elements: 
-            #                     new_component = props.components.add()                   
-            #                     new_item = new_component.elements.add()
-            #                     new_item.type = element.is_a()
-            #                     new_item.name = element.Name
-            #                     new_item.ifc_id = element.id()
-            #                     new_item.side = side
-            #                     new_item.rule = rule
-                                # obj = tool.Ifc.get_object_by_identifier(element.id())
-                                # if obj:
-                                #     obj.select_set(True)   
-                        
+            data.check_free_area(color)             
             print(data.results)
-            with open(r'C:\Users\c4rlo\OneDrive\Área de Trabalho\result.json', "w", encoding="utf-8") as f:
-                json.dump(data.results, f, ensure_ascii=False, indent=4)
+            context.area.tag_redraw()
             return {"FINISHED"}
         except Exception as e:
             bpy.ops.wm.error_message('INVOKE_DEFAULT', message=str(e))
