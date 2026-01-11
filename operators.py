@@ -22,7 +22,6 @@ class Operator_Load_Rules(bpy.types.Operator):
         try:
             with open(self.filepath, "r", encoding="utf-8") as f:
                 dados = json.load(f)
-            print(dados)
             props = context.scene.gei_props
             props.show_rule = False
             data.load_rules(context, dados)
@@ -204,19 +203,19 @@ class Operator_Search(bpy.types.Operator):
     def execute(self, context):         
         props = context.scene.gei_props
         color = props.decorator_color 
-        model = tool.Ifc.get()
         try:       
             data.check_free_area(color)             
             print(data.results)
-            context.area.tag_redraw()
+            #context.area.tag_redraw()
+            props.active_rule_index = 0
             return {"FINISHED"}
         except Exception as e:
             bpy.ops.wm.error_message('INVOKE_DEFAULT', message=str(e))
             return {"CANCELLED"}
     
-    def draw(self, context):
-        layout = self.layout
-        layout.label(text=self.mensagem, icon='ERROR')
+    # def draw(self, context):
+    #     layout = self.layout
+    #     layout.label(text=self.mensagem, icon='ERROR')
 
 class Operator_select_object(bpy.types.Operator):
     """Search components in free area """
@@ -230,7 +229,39 @@ class Operator_select_object(bpy.types.Operator):
         if obj:
             obj.select_set(True)
         return {"FINISHED"}
+    
 
+class Operator_select_results(bpy.types.Operator):
+    """"""
+    bl_idname = "gei.select_results"
+    bl_label = "Select results"
+    bl_options = {"REGISTER", "UNDO"}
+    ifc_id : bpy.props.IntProperty(name='ifc_id')
+
+    def execute(self, context):
+        bpy.ops.object.select_all(action='DESELECT')
+        BoxDecorator.uninstall()
+        context.area.tag_redraw()
+        props = context.scene.gei_props
+        color = props.decorator_color
+        sides = data.results[props.active_rule_index][self.ifc_id]
+        objs = []        
+        obj1 = tool.Ifc.get_object_by_identifier(self.ifc_id)
+        if obj1:
+            objs.append(obj1)
+        for side in sides:
+            elements = sides[side]
+            for element in elements:
+                obj = tool.Ifc.get_object_by_identifier(element.id())
+                if obj:
+                    objs.append(obj)
+        for obj in objs:
+            obj.select_set(True)
+        
+        data.localview(True)
+        data.draw_box(props.active_rule_index, obj1, color, context)
+        return {"FINISHED"}
+    
 #============================================================================================
 # Geral
 #============================================================================================

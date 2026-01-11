@@ -178,11 +178,11 @@ class GI_UL_result_elements(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if item:
             row = layout.row(align=True)  
-            row.label(text=str(item.ifc_id))             
+            #row.label(text=str(item.ifc_id))             
             row.label(text=item.type)
             row.label(text=item.name)          
-            # op = row.operator("gei.select_object", text="", icon="RESTRICT_SELECT_OFF")
-            # op.ifc_id = item.ifc_id
+            row.operator("gei.select_object", text="", icon="RESTRICT_SELECT_OFF").ifc_id = item.ifc_id
+            row.operator("gei.select_results", text="", icon="ZOOM_ALL").ifc_id = item.ifc_id
 
 class GI_UL_components(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):

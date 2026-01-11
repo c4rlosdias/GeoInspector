@@ -1,6 +1,7 @@
 import ifcopenshell
 import mathutils
 import multiprocessing
+from .decorators import BoxDecorator
 import ifcopenshell.util.selector as selector
 import bonsai.tool as tool
 import bpy
@@ -171,6 +172,7 @@ def delete_rule(context, i):
 def load_rules(context, dados):    
     props = context.scene.gei_props
     props.rules.clear()
+    props.result_elements.clear()
     n = 0
     rules.clear()        
     for dado in dados['rules']:
@@ -246,41 +248,22 @@ def check_free_area(color):
         print(f'checking rule {rule} done!')
         results[rule] = res_elements
 
-def _check_free_area(rule, source_query, search_query, color, distances ):
-    sides = ['front', 'back', 'right', 'left', 'top', 'bottom']
-    components = {}
-    tree = None
-    print(f'initializing rule {rule}...')
-    elements = search_filter(None, source_query)
-    for element in elements:
-        obj = tool.Ifc.get_object_by_identifier(element.id())        
-        if obj:
-            print('verify if tree exists...')
-            if not tree:
-                print('creating tree...')
-                tree = get_tree()
-                print('tree created')
-            else:
-                print('tree exist')
-
-            for side in sides:
-                dist_side = distances[side]
-                if dist_side > 0:
-                    corners, edges, minpt, maxpt = get_box(obj, dist_side, side, color)
-                    print(f'find elements for {side}...')
-                    elements = tree.select_box((minpt,maxpt), completely_within=True)
-                    print('filtering...')
-                    elements = search_filter(elements, search_query)
-                    components[side] = elements
-            print(f'checking rule {rule} done!')
-    return components 
-
 def localview(with_zoom):
     for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':
             with bpy.context.temp_override(area=area, region=area.regions[-1]):
                 bpy.ops.view3d.localview(frame_selected=with_zoom)
             break
+
+def draw_box(rule, obj, color, context):    
+    distances = rules[rule]['distances']
+    for side, distance in distances.items():
+        if distance > 0:
+            corners, edges, minpt, maxpt = get_box(obj, distance, side, color)
+            BoxDecorator.install(context, corners, edges)
+    context.area.tag_redraw()
+
+
 
 
 
