@@ -1,3 +1,6 @@
+# This module provides functionality for processing IFC files in the GeoInspector application.
+# It includes utilities for geometric operations, rule management, and element filtering.
+# Main modules include ifcopenshell for IFC file handling and mathutils for mathematical operations.
 import ifcopenshell
 import mathutils
 import multiprocessing
@@ -9,6 +12,11 @@ import json
 
 rules = {}
 results = {}
+def qts(dictionary):
+    count = 0
+    for value in dictionary.values():
+        count += len(value)
+    return count
 
 def get_tree():
     tree = ifcopenshell.geom.tree()
@@ -242,9 +250,10 @@ def check_free_area(color):
                         print(f'find elements for {side}...')
                         elements2 = tree.select_box((minpt,maxpt), completely_within=True)
                         print('filtering...')
-                        elements2 = search_filter(elements2, search_query)
+                        elements2 = search_filter(elements2, search_query + f",!IfcOpeningElement, !{element.GlobalId}")  # exclude openings
                         components[side] = list(elements2)
-            res_elements[element.id()]=components
+            if qts(components) > 0:
+                res_elements[element.id()]=components
         print(f'checking rule {rule} done!')
         results[rule] = res_elements
 
@@ -255,15 +264,32 @@ def localview(with_zoom):
                 bpy.ops.view3d.localview(frame_selected=with_zoom)
             break
 
-def draw_box(rule, obj, color, context):    
+def draw_box(rule, obj, color, context): 
+    props = context.scene.gei_props   
+    print(props.box_is_hide)
     distances = rules[rule]['distances']
     for side, distance in distances.items():
         if distance > 0:
             corners, edges, minpt, maxpt = get_box(obj, distance, side, color)
-            BoxDecorator.install(context, corners, edges)
+            if not props.box_is_hide:
+                BoxDecorator.uninstall(context)
+                print('uninstall box decorator')
+            else:
+                BoxDecorator.install(context, corners, edges) 
+                print('install box decorator')
+                
+                
     context.area.tag_redraw()
 
-
+def make_serializable(obj):
+    if isinstance(obj, (str, int, float, bool)) or obj is None:
+        return obj
+    elif isinstance(obj, dict):
+        return {k: make_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple, set)):
+        return [item.id()for item in obj]
+    else:
+        return str(obj)  # fallback: string representation
 
 
 

@@ -39,7 +39,7 @@ class Operator_Save_Rules(bpy.types.Operator):
     """ """
     bl_idname = "gei.save_rules"
     bl_label = "Save rules"
-    bl_description = "Load rules"
+    bl_description = "Save rules"
     bl_options = {"REGISTER", "UNDO"}
 
     filepath: bpy.props.StringProperty(subtype="FILE_PATH")
@@ -96,7 +96,11 @@ class Operator_Show_Hide_Rule(bpy.types.Operator):
 
     def execute(self, context): 
         props = context.scene.gei_props
-        props.show_rule = not props.show_rule            
+        props.active_rule_index = self.id
+        item = props.rules[self.id]
+        item.show_rule = not item.show_rule 
+        props.show_rule = item.show_rule   
+        props.active_rule_index = self.id        
         return {"FINISHED"}
     
 class Operator_Quit_Rule(bpy.types.Operator):
@@ -142,41 +146,6 @@ class Operator_Delete_Rule(bpy.types.Operator):
             return {"CANCELLED"}
         return {"FINISHED"}
 
-class Operator_Draw_Box(bpy.types.Operator):
-    """Draw clearance box """
-    bl_idname = "gei.draw_box"
-    bl_label = "Relate Voids to Elements"
-    bl_options = {"REGISTER", "UNDO"}
-
-
-    def execute(self, context):         
-        props = context.scene.gei_props
-        objs = context.selected_objects
-        color = props.decorator_color
-        sides = ['front', 'back', 'right', 'left', 'top', 'bottom']
-        BoxDecorator.uninstall()
-        context.area.tag_redraw()
-        if len(objs)>0:
-            obj = objs[0]
-            
-            for side in sides:
-                dist_side = getattr(props, f'{side}_dist')
-                if dist_side > 0:
-                    corners, edges, minpt, maxpt = data.get_box(obj, dist_side, side, color)
-                    BoxDecorator.install(context, corners, edges)                  
-            context.area.tag_redraw()
-        return {"FINISHED"}
-    
-class Operator_Remove_Box(bpy.types.Operator):
-    """Remove clearance box"""
-    bl_idname = "gei.remove_box"
-    bl_label = "Remove clearance box"
-    bl_options = {"REGISTER", "UNDO"}
-
-    def execute(self, context): 
-        BoxDecorator.uninstall()
-        context.area.tag_redraw()
-        return {"FINISHED"}
     
 class Operator_Clear_Distances(bpy.types.Operator):
     """Clear input distances"""
@@ -206,16 +175,13 @@ class Operator_Search(bpy.types.Operator):
         try:       
             data.check_free_area(color)             
             print(data.results)
-            #context.area.tag_redraw()
             props.active_rule_index = 0
             return {"FINISHED"}
         except Exception as e:
             bpy.ops.wm.error_message('INVOKE_DEFAULT', message=str(e))
             return {"CANCELLED"}
     
-    # def draw(self, context):
-    #     layout = self.layout
-    #     layout.label(text=self.mensagem, icon='ERROR')
+
 
 class Operator_select_object(bpy.types.Operator):
     """Search components in free area """
@@ -240,7 +206,7 @@ class Operator_select_results(bpy.types.Operator):
 
     def execute(self, context):
         bpy.ops.object.select_all(action='DESELECT')
-        BoxDecorator.uninstall()
+        #PBoxDecorator.uninstall(context)
         context.area.tag_redraw()
         props = context.scene.gei_props
         color = props.decorator_color
@@ -262,6 +228,33 @@ class Operator_select_results(bpy.types.Operator):
         data.draw_box(props.active_rule_index, obj1, color, context)
         return {"FINISHED"}
     
+class Operator_Save_Results(bpy.types.Operator):
+    """ """
+    bl_idname = "gei.save_results"
+    bl_label = "Save results"
+    bl_description = "Save results"
+    bl_options = {"REGISTER", "UNDO"}
+
+    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context): 
+        try:     
+            serializable_results = data.make_serializable(data.results)      
+            with open(self.filepath, "w", encoding="utf-8") as f:
+                json.dump(serializable_results, f, ensure_ascii=False, indent=4)
+            print(data.results)
+            
+        except Exception as e:
+            bpy.ops.wm.error_message('INVOKE_DEFAULT', message=str(e))
+            return {"CANCELLED"}
+
+        return {"FINISHED"}
+    
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return{'RUNNING_MODAL'}
+
+
 #============================================================================================
 # Geral
 #============================================================================================

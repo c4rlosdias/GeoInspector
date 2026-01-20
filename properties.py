@@ -69,6 +69,7 @@ class Rule(PropertyGroup):
     id                   : IntProperty(name='id')
     name                 : StringProperty(name='name')
     description          : StringProperty(name='description')
+    show_rule            : BoolProperty(name='show rule', default=False)
 
 
 
@@ -80,7 +81,7 @@ class GEI_Properties(PropertyGroup):
     rules                : CollectionProperty(name='results', type=Rule)
     active_rule_index    : IntProperty(name='rule index', update=update_active_rule) 
     show_rule            : BoolProperty(name='show rule', default=False)
-    box_is_hide          : BoolProperty(name="hide box", default=False)
+    box_is_hide          : BoolProperty(name="hide box", default=True)
 
     rule_name            : StringProperty(name='rule name')
     rule_description     : StringProperty(name='rule description')
@@ -98,7 +99,7 @@ class GEI_Properties(PropertyGroup):
                                            size=4,
                                            min=0.0,
                                            max=1.0,
-                                           default=(0.0, 0.0, 1.0, 1.0) 
+                                           default=(0.0, 0.0, 1.0, 0.2) 
                            )
     
     # UL elements
